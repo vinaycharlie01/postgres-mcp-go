@@ -1,0 +1,40 @@
+# MCP Microsoft SQL Server Server configuration (Read-Only Mode)
+# Copy to config.yaml and adjust. Environment variables override these values,
+# so secrets can be injected at runtime instead of stored here.
+
+database:
+  host: "localhost"
+  port: 1433
+  user: "readonly_user"
+  password: ""            # prefer SQLSERVER_PASSWORD env var
+  database: "MyDatabase"
+  encrypt: "true"          # "true", "false" or "disable"
+  trust_server_certificate: false
+  connection_timeout: 30   # seconds
+
+# Always Encrypted (client-side column decryption). When enabled, the column
+# master key is loaded from a local PFX certificate.
+encryption:
+  enabled: false
+  key_path: ""             # absolute path to the .pfx file
+  key_password: ""         # prefer SQLSERVER_ALWAYS_ENCRYPTED_KEY_PASSWORD env var
+
+# Read-only query safety limits.
+query:
+  max_length: 5000         # characters
+  max_rows: 1000           # rows returned
+  timeout: 30s             # per-query execution timeout
+
+# Connection pool tuning.
+pool:
+  max_open_conns: 10
+  max_idle_conns: 5
+  conn_max_lifetime: 1h
+
+logging:
+  level: "info"            # debug, info, warn, error
+  format: "json"           # json, text
+
+mcp:
+  transport: "stdio"       # stdio (recommended) or http
+  port: 9090

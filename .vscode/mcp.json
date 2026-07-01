@@ -1,0 +1,75 @@
+{
+  // VS Code MCP config. On first start, VS Code prompts for the values below.
+  // Open this folder (mcp-mssql-go) as the workspace, then run the server from
+  // the "MCP: List Servers" command or the Start button shown above the
+  // "servers" entry. Logs appear in the MCP output channel (stderr).
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "sqlserver-host",
+      "description": "SQL Server host (e.g. localhost or db.internal)"
+    },
+    {
+      "type": "promptString",
+      "id": "sqlserver-port",
+      "description": "SQL Server port",
+      "default": "1433"
+    },
+    {
+      "type": "promptString",
+      "id": "sqlserver-user",
+      "description": "SQL Server login (read-only user recommended)"
+    },
+    {
+      "type": "promptString",
+      "id": "sqlserver-password",
+      "description": "SQL Server password",
+      "password": true
+    },
+    {
+      "type": "promptString",
+      "id": "sqlserver-db",
+      "description": "Database name"
+    },
+    {
+      "type": "promptString",
+      "id": "sqlserver-ae-enabled",
+      "description": "Enable Always Encrypted? (true/false)",
+      "default": "false"
+    },
+    {
+      "type": "promptString",
+      "id": "sqlserver-ae-key-path",
+      "description": "Always Encrypted: absolute path to the PFX certificate (leave empty if disabled)",
+      "default": ""
+    },
+    {
+      "type": "promptString",
+      "id": "sqlserver-ae-key-password",
+      "description": "Always Encrypted: PFX certificate password (leave empty if disabled)",
+      "password": true
+    }
+  ],
+  "servers": {
+    "mssql-readonly": {
+      "type": "stdio",
+      "command": "go run ${workspaceFolder}/cmd/server/main.go",
+      "env": {
+        "SQLSERVER_HOST": "${input:sqlserver-host}",
+        "SQLSERVER_PORT": "${input:sqlserver-port}",
+        "SQLSERVER_USER": "${input:sqlserver-user}",
+        "SQLSERVER_PASSWORD": "${input:sqlserver-password}",
+        "SQLSERVER_DB": "${input:sqlserver-db}",
+        "SQLSERVER_ENCRYPT": "true",
+        "SQLSERVER_TRUST_SERVER_CERTIFICATE": "true",
+        "SQLSERVER_ALWAYS_ENCRYPTED_ENABLED": "${input:sqlserver-ae-enabled}",
+        "SQLSERVER_ALWAYS_ENCRYPTED_KEY_PATH": "${input:sqlserver-ae-key-path}",
+        "SQLSERVER_ALWAYS_ENCRYPTED_KEY_PASSWORD": "${input:sqlserver-ae-key-password}",
+        "LOG_LEVEL": "info",
+        "LOG_FORMAT": "text",
+        "LOG_FILE": "${workspaceFolder}/mcp-mssql.log",
+        "MCP_TRANSPORT": "stdio"
+      }
+    }
+  }
+}

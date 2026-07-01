@@ -1,0 +1,11 @@
+.git
+.github
+bin
+dist
+out
+*.md
+docs
+.env
+config.yaml
+*.pfx
+coverage.out
