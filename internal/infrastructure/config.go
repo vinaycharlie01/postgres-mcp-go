@@ -16,9 +16,6 @@ type Config struct {
 	// Database connection configuration
 	Database DatabaseConfig `yaml:"database"`
 
-	// Always Encrypted configuration
-	Encryption EncryptionConfig `yaml:"encryption"`
-
 	// Query safety / limit configuration
 	Query QueryConfig `yaml:"query"`
 
@@ -32,7 +29,7 @@ type Config struct {
 	MCP MCPConfig `yaml:"mcp"`
 }
 
-// DatabaseConfig holds Microsoft SQL Server connection settings.
+// DatabaseConfig holds PostgreSQL connection settings.
 type DatabaseConfig struct {
 	Host     string `yaml:"host"`
 	Port     int    `yaml:"port"`
@@ -40,27 +37,15 @@ type DatabaseConfig struct {
 	Password string `yaml:"password"`
 	Database string `yaml:"database"`
 
-	// Encrypt controls TLS for the wire protocol: "true", "false" or "disable".
-	Encrypt string `yaml:"encrypt"`
+	// SSLMode controls TLS for the connection: "disable", "require",
+	// "verify-ca", or "verify-full".
+	SSLMode string `yaml:"ssl_mode"`
 
-	// TrustServerCertificate skips server certificate validation when true.
-	TrustServerCertificate bool `yaml:"trust_server_certificate"`
+	// SearchPath sets the default schema search path (e.g. "public").
+	SearchPath string `yaml:"search_path"`
 
-	// ConnectionTimeout is the login timeout in seconds.
+	// ConnectionTimeout is the connection timeout in seconds.
 	ConnectionTimeout int `yaml:"connection_timeout"`
-}
-
-// EncryptionConfig holds Always Encrypted settings.
-type EncryptionConfig struct {
-	// Enabled turns on column encryption (Always Encrypted) for the connection.
-	Enabled bool `yaml:"enabled"`
-
-	// KeyPath is the absolute path to the PFX certificate that holds the
-	// column master key used to decrypt column encryption keys.
-	KeyPath string `yaml:"key_path"`
-
-	// KeyPassword is the password protecting the PFX certificate.
-	KeyPassword string `yaml:"key_password"`
 }
 
 // QueryConfig holds read-only query safety limits.
@@ -128,8 +113,9 @@ type MCPConfig struct {
 
 // Default values for the configuration.
 const (
-	defaultPort              = 1433
-	defaultEncrypt           = "true"
+	defaultPort              = 5432
+	defaultSSLMode           = "require"
+	defaultSearchPath        = "public"
 	defaultConnectionTimeout = 30
 	defaultMaxQueryLength    = 5000
 	defaultMaxRows           = 1000
@@ -178,7 +164,7 @@ func getConfigPath() string {
 		return "config.yaml"
 	}
 	if homeDir, err := os.UserHomeDir(); err == nil {
-		path := filepath.Join(homeDir, ".mcp-mssql", "config.yaml")
+		path := filepath.Join(homeDir, ".mcp-postgres", "config.yaml")
 		if _, err := os.Stat(path); err == nil {
 			return path
 		}
@@ -204,40 +190,29 @@ func loadFromYAML(path string) (*Config, error) {
 // values override; empty environment variables are ignored.
 func applyEnvOverrides(config *Config) {
 	// Database
-	if v := os.Getenv("SQLSERVER_HOST"); v != "" {
+	if v := os.Getenv("POSTGRES_HOST"); v != "" {
 		config.Database.Host = v
 	}
-	if v, ok := lookupInt("SQLSERVER_PORT"); ok {
+	if v, ok := lookupInt("POSTGRES_PORT"); ok {
 		config.Database.Port = v
 	}
-	if v := os.Getenv("SQLSERVER_USER"); v != "" {
+	if v := os.Getenv("POSTGRES_USER"); v != "" {
 		config.Database.User = v
 	}
-	if v := os.Getenv("SQLSERVER_PASSWORD"); v != "" {
+	if v := os.Getenv("POSTGRES_PASSWORD"); v != "" {
 		config.Database.Password = v
 	}
-	if v := os.Getenv("SQLSERVER_DB"); v != "" {
+	if v := os.Getenv("POSTGRES_DB"); v != "" {
 		config.Database.Database = v
 	}
-	if v := os.Getenv("SQLSERVER_ENCRYPT"); v != "" {
-		config.Database.Encrypt = v
+	if v := os.Getenv("POSTGRES_SSL_MODE"); v != "" {
+		config.Database.SSLMode = v
 	}
-	if v, ok := lookupBool("SQLSERVER_TRUST_SERVER_CERTIFICATE"); ok {
-		config.Database.TrustServerCertificate = v
+	if v := os.Getenv("POSTGRES_SEARCH_PATH"); v != "" {
+		config.Database.SearchPath = v
 	}
-	if v, ok := lookupInt("SQLSERVER_CONNECTION_TIMEOUT"); ok {
+	if v, ok := lookupInt("POSTGRES_CONNECTION_TIMEOUT"); ok {
 		config.Database.ConnectionTimeout = v
-	}
-
-	// Always Encrypted
-	if v, ok := lookupBool("SQLSERVER_ALWAYS_ENCRYPTED_ENABLED"); ok {
-		config.Encryption.Enabled = v
-	}
-	if v := os.Getenv("SQLSERVER_ALWAYS_ENCRYPTED_KEY_PATH"); v != "" {
-		config.Encryption.KeyPath = v
-	}
-	if v := os.Getenv("SQLSERVER_ALWAYS_ENCRYPTED_KEY_PASSWORD"); v != "" {
-		config.Encryption.KeyPassword = v
 	}
 
 	// Query limits
@@ -287,8 +262,11 @@ func applyDefaults(config *Config) {
 	if config.Database.Port == 0 {
 		config.Database.Port = defaultPort
 	}
-	if config.Database.Encrypt == "" {
-		config.Database.Encrypt = defaultEncrypt
+	if config.Database.SSLMode == "" {
+		config.Database.SSLMode = defaultSSLMode
+	}
+	if config.Database.SearchPath == "" {
+		config.Database.SearchPath = defaultSearchPath
 	}
 	if config.Database.ConnectionTimeout == 0 {
 		config.Database.ConnectionTimeout = defaultConnectionTimeout
@@ -333,25 +311,24 @@ func applyDefaults(config *Config) {
 // invalid or missing required values.
 func (c *Config) Validate() error {
 	if c.Database.Host == "" {
-		return fmt.Errorf("database host is required (set SQLSERVER_HOST)")
+		return fmt.Errorf("database host is required (set POSTGRES_HOST)")
 	}
 	if c.Database.User == "" {
-		return fmt.Errorf("database user is required (set SQLSERVER_USER)")
+		return fmt.Errorf("database user is required (set POSTGRES_USER)")
 	}
 	if c.Database.Database == "" {
-		return fmt.Errorf("database name is required (set SQLSERVER_DB)")
+		return fmt.Errorf("database name is required (set POSTGRES_DB)")
 	}
 	if c.Database.Port < 1 || c.Database.Port > 65535 {
 		return fmt.Errorf("invalid database port: %d", c.Database.Port)
 	}
 
-	if c.Encryption.Enabled {
-		if c.Encryption.KeyPath == "" {
-			return fmt.Errorf("always encrypted is enabled but SQLSERVER_ALWAYS_ENCRYPTED_KEY_PATH is not set")
-		}
-		if _, err := os.Stat(c.Encryption.KeyPath); err != nil {
-			return fmt.Errorf("always encrypted key path %q is not accessible: %w", c.Encryption.KeyPath, err)
-		}
+	validSSLModes := map[string]bool{
+		"disable": true, "allow": true, "prefer": true,
+		"require": true, "verify-ca": true, "verify-full": true,
+	}
+	if !validSSLModes[c.Database.SSLMode] {
+		return fmt.Errorf("invalid ssl_mode: %s (must be one of: disable, allow, prefer, require, verify-ca, verify-full)", c.Database.SSLMode)
 	}
 
 	if c.Query.MaxLength < 1 {
@@ -396,21 +373,4 @@ func lookupInt(key string) (int, bool) {
 		return 0, false
 	}
 	return value, true
-}
-
-// lookupBool reads a boolean environment variable, returning ok=false when the
-// variable is unset.
-func lookupBool(key string) (bool, bool) {
-	valueStr := strings.TrimSpace(strings.ToLower(os.Getenv(key)))
-	if valueStr == "" {
-		return false, false
-	}
-	switch valueStr {
-	case "true", "1", "yes", "on", "enabled":
-		return true, true
-	case "false", "0", "no", "off", "disabled":
-		return false, true
-	default:
-		return false, false
-	}
 }

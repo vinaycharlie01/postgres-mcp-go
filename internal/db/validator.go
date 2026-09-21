@@ -67,7 +67,7 @@ var intoPattern = regexp.MustCompile(`(?i)\bINTO\b`)
 // a second statement after an allowed SELECT.
 var stmtSeparatorPattern = regexp.MustCompile(`;\s*\S`)
 
-// stringLiteralPattern matches a T-SQL single-quoted string literal (with ''
+// stringLiteralPattern matches a T-SQL single-quoted string literal (with ”
 // escaping). Literal contents are data, not executable SQL, so they are blanked
 // before keyword matching to avoid false positives (e.g. WHERE name = 'INSERT').
 var stringLiteralPattern = regexp.MustCompile(`'(?:[^']|'')*'`)

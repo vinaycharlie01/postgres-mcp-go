@@ -11,10 +11,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/vinaykumar-v4_PLIBGIT/mssql-mcp-go/internal/adapters/mcp"
-	"github.com/vinaykumar-v4_PLIBGIT/mssql-mcp-go/internal/db"
-	"github.com/vinaykumar-v4_PLIBGIT/mssql-mcp-go/internal/infrastructure"
-	"github.com/vinaykumar-v4_PLIBGIT/mssql-mcp-go/internal/mssql"
+	"github.com/vinaycharlie01/postgres-mcp-go/internal/adapters/mcp"
+	"github.com/vinaycharlie01/postgres-mcp-go/internal/db"
+	"github.com/vinaycharlie01/postgres-mcp-go/internal/infrastructure"
+	"github.com/vinaycharlie01/postgres-mcp-go/internal/postgres"
 )
 
 func main() {
@@ -31,7 +31,7 @@ func main() {
 	// not corrupt the MCP protocol stream on stdout.
 	logger := infrastructure.NewLogger(config)
 	slog.SetDefault(logger)
-	logger.Info("starting MCP SQL Server (read-only)",
+	logger.Info("starting MCP PostgreSQL Server (read-only)",
 		"version", "1.0.0",
 		"transport", config.MCP.Transport,
 		"database", config.Database.Database,
@@ -54,7 +54,7 @@ func main() {
 	}()
 
 	// Build the service and MCP server.
-	service := mssql.NewService(conn, config.Database.Database)
+	service := postgres.NewService(conn, config.Database.Database)
 	mcpServer := mcp.NewMCPServer(service, logger)
 
 	// Signal handling for graceful shutdown.

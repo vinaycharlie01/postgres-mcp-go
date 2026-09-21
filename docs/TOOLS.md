@@ -1,6 +1,6 @@
 # 🛠️ Complete Tool Reference
 
-This document provides a comprehensive reference for all tools available in the MSSQL MCP Server.
+This document provides a comprehensive reference for all tools available in the POSTGRES MCP Server.
 
 ## 📑 Table of Contents
 
@@ -661,5 +661,5 @@ High-level object counts.
 ## Need Help?
 
 - 📖 [Main README](../README.md)
-- 🐛 [Report Issues](https://github.com/yourusername/mssql-mcp-go/issues)
-- 💬 [Discussions](https://github.com/yourusername/mssql-mcp-go/discussions)
+- 🐛 [Report Issues](https://github.com/yourusername/postgres-mcp-go/issues)
+- 💬 [Discussions](https://github.com/yourusername/postgres-mcp-go/discussions)

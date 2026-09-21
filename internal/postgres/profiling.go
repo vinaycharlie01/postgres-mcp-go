@@ -1,12 +1,13 @@
-package mssql
+package postgres
 
 import (
 	"context"
 	"fmt"
 	"strings"
+
+	"github.com/vinaycharlie01/postgres-mcp-go/internal/db"
 )
 
-// defaultSampleLimit caps the number of rows returned by sampling tools.
 const defaultSampleLimit = 100
 
 // TableStatistics returns row count, column count and storage statistics for a
@@ -24,7 +25,7 @@ func (s *Service) TableStatistics(ctx context.Context, table string) (map[string
 	return storage, nil
 }
 
-// ColumnStatistics computes min/max/avg/distinct/null statistics for a column.
+// ColumnStatistics computes min/max/distinct/null statistics for a column.
 func (s *Service) ColumnStatistics(ctx context.Context, table, column string) (map[string]any, error) {
 	qualified, err := s.qualifiedTable(table)
 	if err != nil {
@@ -40,8 +41,8 @@ SELECT
     COUNT(%[1]s)                               AS non_null_count,
     COUNT(*) - COUNT(%[1]s)                    AS null_count,
     COUNT(DISTINCT %[1]s)                      AS distinct_count,
-    CONVERT(NVARCHAR(4000), MIN(%[1]s))        AS min_value,
-    CONVERT(NVARCHAR(4000), MAX(%[1]s))        AS max_value
+    MIN(%[1]s)::text                           AS min_value,
+    MAX(%[1]s)::text                           AS max_value
 FROM %[2]s`, qcol, qualified)
 	row, err := s.conn.QueryRow(ctx, sql)
 	if err != nil {
@@ -69,12 +70,13 @@ func (s *Service) ColumnDistinctValues(ctx context.Context, table, column string
 		return nil, err
 	}
 	sql := fmt.Sprintf(`
-SELECT TOP (%[3]d)
-    CONVERT(NVARCHAR(4000), %[1]s) AS value,
-    COUNT(*) AS frequency
+SELECT
+    %[1]s::text AS value,
+    COUNT(*)    AS frequency
 FROM %[2]s
 GROUP BY %[1]s
-ORDER BY COUNT(*) DESC`, qcol, qualified, limit)
+ORDER BY COUNT(*) DESC
+LIMIT %[3]d`, qcol, qualified, limit)
 	return s.rows(ctx, sql)
 }
 
@@ -93,7 +95,7 @@ SELECT
     COUNT(*)                AS total_rows,
     COUNT(*) - COUNT(%[1]s) AS null_count,
     CASE WHEN COUNT(*) = 0 THEN 0
-         ELSE CAST((COUNT(*) - COUNT(%[1]s)) * 100.0 / COUNT(*) AS DECIMAL(5,2))
+         ELSE ROUND((COUNT(*) - COUNT(%[1]s)) * 100.0 / COUNT(*), 2)
     END                     AS null_percentage
 FROM %[2]s`, qcol, qualified)
 	row, err := s.conn.QueryRow(ctx, sql)
@@ -114,15 +116,22 @@ func (s *Service) DataDistribution(ctx context.Context, table, column string, li
 	if err != nil {
 		return nil, err
 	}
+	nullInfo, err := s.ColumnNullAnalysis(ctx, table, column)
+	if err != nil {
+		return nil, err
+	}
 	return map[string]any{
-		"table":        table,
-		"column":       column,
-		"distribution": values,
+		"table":          table,
+		"column":         column,
+		"distinctValues": values,
+		"nullCount":      nullInfo["null_count"],
+		"nullPercentage": nullInfo["null_percentage"],
+		"totalRows":      nullInfo["total_rows"],
 	}, nil
 }
 
-// SampleTableData returns a small sample of rows from a table.
-func (s *Service) SampleTableData(ctx context.Context, table string, limit int) (*queryResultLike, error) {
+// SampleTableData returns the first N rows of a table.
+func (s *Service) SampleTableData(ctx context.Context, table string, limit int) (*db.QueryResult, error) {
 	if limit <= 0 || limit > defaultSampleLimit {
 		limit = defaultSampleLimit
 	}
@@ -130,16 +139,28 @@ func (s *Service) SampleTableData(ctx context.Context, table string, limit int) 
 	if err != nil {
 		return nil, err
 	}
-	sql := fmt.Sprintf(`SELECT TOP (%d) * FROM %s`, limit, qualified)
-	res, err := s.query(ctx, sql)
+	sql := fmt.Sprintf(`SELECT * FROM %s LIMIT %d`, qualified, limit)
+	return s.conn.ExecuteQuery(ctx, sql)
+}
+
+// SampleColumnData returns the first N values of a specific column.
+func (s *Service) SampleColumnData(ctx context.Context, table, column string, limit int) (*db.QueryResult, error) {
+	if limit <= 0 || limit > defaultSampleLimit {
+		limit = defaultSampleLimit
+	}
+	qualified, err := s.qualifiedTable(table)
 	if err != nil {
 		return nil, err
 	}
-	return &queryResultLike{Columns: res.Columns, Rows: res.Rows, RowCount: res.RowCount}, nil
+	qcol, err := quoteName(column)
+	if err != nil {
+		return nil, err
+	}
+	sql := fmt.Sprintf(`SELECT %s FROM %s LIMIT %d`, qcol, qualified, limit)
+	return s.conn.ExecuteQuery(ctx, sql)
 }
 
-// FindDuplicateRows finds groups of duplicate rows based on the given columns
-// (or all columns when none are supplied).
+// FindDuplicateRows finds groups of duplicate rows based on the given columns.
 func (s *Service) FindDuplicateRows(ctx context.Context, table string, columns []string, limit int) ([]map[string]any, error) {
 	if limit <= 0 || limit > defaultSampleLimit {
 		limit = defaultSampleLimit
@@ -172,11 +193,12 @@ func (s *Service) FindDuplicateRows(ctx context.Context, table string, columns [
 	colList := strings.Join(quoted, ", ")
 
 	sql := fmt.Sprintf(`
-SELECT TOP (%[3]d) %[1]s, COUNT(*) AS duplicate_count
+SELECT %[1]s, COUNT(*) AS duplicate_count
 FROM %[2]s
 GROUP BY %[1]s
 HAVING COUNT(*) > 1
-ORDER BY COUNT(*) DESC`, colList, qualified, limit)
+ORDER BY COUNT(*) DESC
+LIMIT %[3]d`, colList, qualified, limit)
 	return s.rows(ctx, sql)
 }
 
@@ -224,39 +246,14 @@ func (s *Service) FindCandidateKeys(ctx context.Context, table string) (map[stri
 		candidates = []string{}
 	}
 	return map[string]any{
-		"table":          table,
-		"rowCount":       total,
-		"candidateKeys":  candidates,
+		"table":         table,
+		"rowCount":      total,
+		"candidateKeys": candidates,
 	}, nil
 }
 
-// qualifiedTable validates and returns the bracket-quoted schema.table form.
+// qualifiedTable validates and returns the double-quoted schema.table form.
 func (s *Service) qualifiedTable(table string) (string, error) {
-	schema, object := splitObjectName(table, "dbo")
+	schema, object := splitObjectName(table, "public")
 	return quoteQualified(schema, object)
-}
-
-// queryResultLike mirrors db.QueryResult so profiling tools can return the same
-// columns/rows/rowCount shape without importing the db package's concrete type
-// into tool signatures.
-type queryResultLike struct {
-	Columns  []string         `json:"columns"`
-	Rows     []map[string]any `json:"rows"`
-	RowCount int              `json:"rowCount"`
-}
-
-// toInt64 best-effort converts a driver numeric value to int64.
-func toInt64(v any) int64 {
-	switch n := v.(type) {
-	case int64:
-		return n
-	case int:
-		return int64(n)
-	case int32:
-		return int64(n)
-	case float64:
-		return int64(n)
-	default:
-		return 0
-	}
 }

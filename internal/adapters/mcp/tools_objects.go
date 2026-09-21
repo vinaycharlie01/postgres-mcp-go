@@ -46,7 +46,7 @@ func (s *MCPServer) registerObjectTools() {
 		})
 
 	registerTool(srv, "get_procedure_definition",
-		"Return the full T-SQL definition and parameters of a stored procedure.",
+		"Return the full SQL definition and parameters of a stored procedure.",
 		func(ctx context.Context, in procedureInput) (any, error) {
 			return svc.GetProcedureDefinition(ctx, in.Procedure)
 		})
@@ -173,7 +173,7 @@ func (s *MCPServer) registerObjectTools() {
 		})
 
 	registerTool(srv, "get_function_definition",
-		"Return the T-SQL definition and parameters of a function.",
+		"Return the SQL definition and parameters of a function.",
 		func(ctx context.Context, in functionInput) (any, error) {
 			return svc.GetFunctionDefinition(ctx, in.Function)
 		})
@@ -206,7 +206,7 @@ func (s *MCPServer) registerObjectTools() {
 		})
 
 	registerTool(srv, "get_trigger_definition",
-		"Return the T-SQL definition of a trigger.",
+		"Return the SQL definition of a trigger.",
 		func(ctx context.Context, in triggerInput) (any, error) {
 			return svc.GetTriggerDefinition(ctx, in.Trigger)
 		})

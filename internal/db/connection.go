@@ -6,18 +6,17 @@ import (
 	"fmt"
 	"log/slog"
 	"net/url"
-	"strconv"
 	"sync"
 	"time"
 
-	// Register the Microsoft SQL Server driver.
-	"github.com/vinaykumar-v4_PLIBGIT/mssql-mcp-go/internal/infrastructure"
+	"github.com/vinaycharlie01/postgres-mcp-go/internal/infrastructure"
 
-	_ "github.com/microsoft/go-mssqldb"
+	// Register the PostgreSQL driver.
+	_ "github.com/lib/pq"
 )
 
-// driverName is the database/sql driver name registered by go-mssqldb.
-const driverName = "sqlserver"
+// driverName is the database/sql driver name registered by lib/pq.
+const driverName = "postgres"
 
 // Connection is a thin, strictly read-only wrapper around a *sql.DB connection
 // pool. It enforces query validation, row limits and per-query timeouts.
@@ -68,12 +67,7 @@ func GetConnection(ctx context.Context, cfg *infrastructure.Config, logger *slog
 // newConnection builds the connection pool, configures it and verifies
 // connectivity with a ping.
 func newConnection(ctx context.Context, cfg *infrastructure.Config, logger *slog.Logger) (*Connection, error) {
-	encFragment, err := configureAlwaysEncrypted(cfg.Encryption, logger)
-	if err != nil {
-		return nil, fmt.Errorf("failed to configure always encrypted: %w", err)
-	}
-
-	dsn := buildDSN(cfg, encFragment)
+	dsn := buildDSN(cfg)
 
 	sqlDB, err := sql.Open(driverName, dsn)
 	if err != nil {
@@ -97,7 +91,7 @@ func newConnection(ctx context.Context, cfg *infrastructure.Config, logger *slog
 	// server fails fast on misconfiguration.
 	if err := conn.pingWithRetry(ctx, 2); err != nil {
 		_ = sqlDB.Close()
-		return nil, fmt.Errorf("failed to connect to SQL Server: %w", err)
+		return nil, fmt.Errorf("failed to connect to PostgreSQL: %w", err)
 	}
 
 	logger.Info("database connection pool established",
@@ -106,34 +100,29 @@ func newConnection(ctx context.Context, cfg *infrastructure.Config, logger *slog
 		slog.String("database", cfg.Database.Database),
 		slog.Int("max_open_conns", cfg.Pool.MaxOpenConns),
 		slog.Int("max_idle_conns", cfg.Pool.MaxIdleConns),
-		slog.Bool("always_encrypted", cfg.Encryption.Enabled),
 	)
 
 	return conn, nil
 }
 
-// buildDSN constructs the go-mssqldb connection string. The application session
-// is also pinned to read-only intent where possible via the connection
-// properties; true enforcement is performed by the Validator.
-func buildDSN(cfg *infrastructure.Config, encFragment string) string {
-	query := url.Values{}
-	query.Set("database", cfg.Database.Database)
-	query.Set("encrypt", cfg.Database.Encrypt)
-	query.Set("connection timeout", strconv.Itoa(cfg.Database.ConnectionTimeout))
-	query.Set("app name", "mcp-mssql-go")
-	if cfg.Database.TrustServerCertificate {
-		query.Set("trustservercertificate", "true")
-	}
-	if encFragment != "" {
-		// encFragment is of the form "columnencryption=true".
-		query.Set("columnencryption", "true")
+// buildDSN constructs the lib/pq PostgreSQL connection string (DSN).
+// The application session is pinned to read-only validation via the Validator;
+// true enforcement is performed there.
+func buildDSN(cfg *infrastructure.Config) string {
+	q := url.Values{}
+	q.Set("dbname", cfg.Database.Database)
+	q.Set("sslmode", cfg.Database.SSLMode)
+	q.Set("connect_timeout", fmt.Sprintf("%d", cfg.Database.ConnectionTimeout))
+	q.Set("application_name", "mcp-postgres-go")
+	if cfg.Database.SearchPath != "" {
+		q.Set("search_path", cfg.Database.SearchPath)
 	}
 
 	u := &url.URL{
-		Scheme:   "sqlserver",
+		Scheme:   "postgres",
 		User:     url.UserPassword(cfg.Database.User, cfg.Database.Password),
 		Host:     fmt.Sprintf("%s:%d", cfg.Database.Host, cfg.Database.Port),
-		RawQuery: query.Encode(),
+		RawQuery: q.Encode(),
 	}
 	return u.String()
 }

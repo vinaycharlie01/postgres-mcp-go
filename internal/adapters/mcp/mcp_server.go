@@ -1,5 +1,5 @@
 // Package mcp implements the MCP server adapter: it owns the server lifecycle
-// and registers the read-only SQL Server tools.
+// and registers the read-only PostgreSQL tools.
 package mcp
 
 import (
@@ -7,20 +7,20 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/vinaykumar-v4_PLIBGIT/mssql-mcp-go/internal/mssql"
+	"github.com/vinaycharlie01/postgres-mcp-go/internal/postgres"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// MCPServer wraps the MCP SDK server and the SQL Server service.
+// MCPServer wraps the MCP SDK server and the PostgreSQL service.
 type MCPServer struct {
 	server  *mcp.Server
-	service *mssql.Service
+	service *postgres.Service
 	logger  *slog.Logger
 }
 
 // NewMCPServer creates a new MCP server backed by the given service.
-func NewMCPServer(service *mssql.Service, logger *slog.Logger) *MCPServer {
+func NewMCPServer(service *postgres.Service, logger *slog.Logger) *MCPServer {
 	return &MCPServer{
 		service: service,
 		logger:  logger,
@@ -31,9 +31,9 @@ func NewMCPServer(service *mssql.Service, logger *slog.Logger) *MCPServer {
 // transport until the context is cancelled or stdin closes.
 func (s *MCPServer) Start(ctx context.Context) error {
 	impl := &mcp.Implementation{
-		Name:    "mssql-mcp-server",
+		Name:    "postgres-mcp-server",
 		Version: "1.0.0",
-		Title:   "Microsoft SQL Server MCP Server (Read-Only)",
+		Title:   "PostgreSQL MCP Server (Read-Only)",
 	}
 
 	server := mcp.NewServer(impl, nil)

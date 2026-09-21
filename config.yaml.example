@@ -1,23 +1,16 @@
-# MCP Microsoft SQL Server Server configuration (Read-Only Mode)
+# MCP PostgreSQL Server configuration (Read-Only Mode)
 # Copy to config.yaml and adjust. Environment variables override these values,
 # so secrets can be injected at runtime instead of stored here.
 
 database:
   host: "localhost"
-  port: 1433
+  port: 5432
   user: "readonly_user"
-  password: ""            # prefer SQLSERVER_PASSWORD env var
-  database: "MyDatabase"
-  encrypt: "true"          # "true", "false" or "disable"
-  trust_server_certificate: false
+  password: ""            # prefer POSTGRES_PASSWORD env var
+  database: "postgres"
+  ssl_mode: "disable"      # "disable", "allow", "prefer", "require", "verify-ca", "verify-full"
+  search_path: "public"
   connection_timeout: 30   # seconds
-
-# Always Encrypted (client-side column decryption). When enabled, the column
-# master key is loaded from a local PFX certificate.
-encryption:
-  enabled: false
-  key_path: ""             # absolute path to the .pfx file
-  key_password: ""         # prefer SQLSERVER_ALWAYS_ENCRYPTED_KEY_PASSWORD env var
 
 # Read-only query safety limits.
 query:
@@ -38,3 +31,4 @@ logging:
 mcp:
   transport: "stdio"       # stdio (recommended) or http
   port: 9090
+

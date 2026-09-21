@@ -10,11 +10,11 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
-// Build builds the mssql-mcp-go binary
+// Build builds the postgres-mcp-go binary
 func Build() error {
-	fmt.Println("Building mssql-mcp-go...")
+	fmt.Println("Building postgres-mcp-go...")
 
-	binary := "mssql-mcp-go"
+	binary := "postgres-mcp-go"
 	if os.Getenv("GOOS") == "windows" {
 		binary += ".exe"
 	}
@@ -38,7 +38,7 @@ func Clean() error {
 
 // Install installs the binary to $GOPATH/bin
 func Install() error {
-	fmt.Println("Installing mssql-mcp-go...")
+	fmt.Println("Installing postgres-mcp-go...")
 	return sh.RunV("go", "install", "./cmd/server")
 }
 

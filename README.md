@@ -1,4 +1,4 @@
-# 🗄️ MSSQL MCP Server (Go)
+# 🗄️ POSTGRES MCP Server (Go)
 
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![MCP Protocol](https://img.shields.io/badge/MCP-Compatible-blue?style=flat)](https://modelcontextprotocol.io)
@@ -113,8 +113,8 @@ graph TB
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/mssql-mcp-go.git
-cd mssql-mcp-go
+git clone https://github.com/yourusername/postgres-mcp-go.git
+cd postgres-mcp-go
 ```
 
 2. **Configure database connection**
@@ -167,7 +167,7 @@ Add to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "mssql-readonly": {
+    "postgres-readonly": {
       "command": "/path/to/mcp-server",
       "args": [],
       "env": {
@@ -183,7 +183,7 @@ Add to your Cline MCP settings:
 
 ```json
 {
-  "mssql-readonly": {
+  "postgres-readonly": {
     "command": "/path/to/mcp-server",
     "args": [],
     "env": {
@@ -279,7 +279,7 @@ Result:
 ## 🏗️ Project Structure
 
 ```
-mssql-mcp-go/
+postgres-mcp-go/
 ├── cmd/
 │   └── server/
 │       └── main.go              # Server entry point
@@ -289,7 +289,7 @@ mssql-mcp-go/
 │   │       ├── server.go
 │   │       ├── tools_*.go       # Tool implementations
 │   │       └── handlers.go
-│   ├── mssql/                   # SQL Server service layer
+│   ├── postgres/                   # SQL Server service layer
 │   │   ├── service.go
 │   │   ├── discovery.go
 │   │   ├── analysis.go
@@ -317,7 +317,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ### Adding New Tools
 
 1. Define the tool in `internal/adapters/mcp/tools_*.go`
-2. Implement the business logic in `internal/mssql/*.go`
+2. Implement the business logic in `internal/postgres/*.go`
 3. Add tests
 4. Update documentation
 
@@ -328,14 +328,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - [Model Context Protocol](https://modelcontextprotocol.io) by Anthropic
-- [go-mssqldb](https://github.com/denisenkom/go-mssqldb) - SQL Server driver for Go
+- [go-postgresdb](https://github.com/denisenkom/go-postgresdb) - SQL Server driver for Go
 - The Go community for excellent tooling and libraries
 
 ## 📞 Support
 
 - 📧 Email: vinaykumaree5@gmail.com
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/mssql-mcp-go/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/mssql-mcp-go/discussions)
+- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/postgres-mcp-go/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/postgres-mcp-go/discussions)
 
 ## 🗺️ Roadmap
 
@@ -354,6 +354,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Made with ❤️ for the database community**
 
-[⭐ Star us on GitHub](https://github.com/yourusername/mssql-mcp-go) | [📖 Documentation](docs/) | [🐛 Report Bug](https://github.com/yourusername/mssql-mcp-go/issues)
+[⭐ Star us on GitHub](https://github.com/yourusername/postgres-mcp-go) | [📖 Documentation](docs/) | [🐛 Report Bug](https://github.com/yourusername/postgres-mcp-go/issues)
 
 </div>

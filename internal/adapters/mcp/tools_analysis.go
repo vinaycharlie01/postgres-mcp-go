@@ -367,7 +367,7 @@ func (s *MCPServer) registerAnalysisTools() {
 		})
 
 	registerTool(srv, "deprecated_feature_detection",
-		"Scan module definitions for deprecated T-SQL features that need attention before migration.",
+		"Scan module definitions for deprecated PostgreSQL features that need attention before migration.",
 		func(ctx context.Context, _ emptyInput) (any, error) {
 			rows, err := svc.DeprecatedFeatureDetection(ctx)
 			return list("findings", rows), err
