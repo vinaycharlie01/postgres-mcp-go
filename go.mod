@@ -6,6 +6,7 @@ require (
 	github.com/lib/pq v1.12.3
 	github.com/magefile/mage v1.17.2
 	github.com/modelcontextprotocol/go-sdk v1.6.1
+	github.com/nirantaraai/nava v0.0.0-20260627175157-a13fb04023e4
 	gopkg.in/yaml.v3 v3.0.1
 )
 
