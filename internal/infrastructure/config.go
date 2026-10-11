@@ -187,6 +187,7 @@ func loadFromYAML(path string) (*Config, error) {
 	if err := yaml.Unmarshal(data, config); err != nil {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
+
 	return config, nil
 }
 
@@ -376,5 +377,6 @@ func lookupInt(key string) (int, bool) {
 	if err != nil {
 		return 0, false
 	}
+
 	return value, true
 }

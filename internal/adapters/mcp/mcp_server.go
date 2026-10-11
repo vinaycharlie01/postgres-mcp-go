@@ -46,6 +46,7 @@ func (s *MCPServer) Start(ctx context.Context) error {
 	if err := server.Run(ctx, transport); err != nil {
 		return fmt.Errorf("failed to run MCP server: %w", err)
 	}
+
 	return nil
 }
 
