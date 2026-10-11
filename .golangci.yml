@@ -34,7 +34,8 @@ linters:
     - mnd
     - lll
     - misspell
-    - nlreturn
+    # nlreturn disabled: two-line closures (assign + return) dominate the MCP
+    # adapter layer and blank-line-before-return hurts readability there.
     - nolintlint
     - prealloc
     - rowserrcheck
