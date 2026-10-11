@@ -184,6 +184,7 @@ jobs:
         with:
           format: spdx-json
           output-file: sbom.spdx.json
+          upload-release-assets: false
       - name: Upload SBOM
         uses: actions/upload-artifact@v4
         with:
@@ -303,6 +304,10 @@ jobs:
       - name: Install mage
         if: steps.cache-mage.outputs.cache-hit != 'true'
         run: go install github.com/magefile/mage@${{ env.MAGE_VERSION }}
+      - name: Install GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          install-only: true
       - name: Release
         run: mage release
         env:
