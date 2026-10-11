@@ -1,0 +1,79 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    gofmt:
+      simplify: true
+
+linters:
+  default: none
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - ineffassign
+    - unused
+    - gosec
+    - revive
+    - exhaustive
+    - noctx
+    - bodyclose
+    - contextcheck
+    - cyclop
+    - dupl
+    - funlen
+    - gocognit
+    - gocritic
+    - godot
+    - mnd
+    - lll
+    - misspell
+    # nlreturn disabled: two-line closures (assign + return) dominate the MCP
+    # adapter layer and blank-line-before-return hurts readability there.
+    - nolintlint
+    - prealloc
+    - rowserrcheck
+    - sqlclosecheck
+    - tparallel
+    - unconvert
+    - unparam
+    - wastedassign
+    - whitespace
+  settings:
+    lll:
+      line-length: 280
+    funlen:
+      lines: 400
+      statements: 200
+    cyclop:
+      max-complexity: 25
+    mnd:
+      ignored-numbers:
+        - "2"
+        - "3"
+        - "10"
+        - "20"
+        - "50"
+        - "100"
+        - "200"
+        - "500"
+        - "1000"
+      ignored-functions:
+        - "time.Duration"
+        - "make"
+        - "fmt.Sprintf"
+        - "float64"
+        - "float32"
+        - "v.SetDefault"
+        - "time.NewTicker"
+        - "context.WithTimeout"
+    revive:
+      rules:
+        - name: exported
+          disabled: true

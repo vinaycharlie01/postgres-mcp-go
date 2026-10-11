@@ -23,12 +23,12 @@ func (c *Connection) ExplainQuery(ctx context.Context, query string) (string, er
 	queryCtx, cancel := context.WithTimeout(ctx, c.queryTimeout)
 	defer cancel()
 
-	explainSQL := "EXPLAIN (FORMAT JSON, ANALYZE FALSE, VERBOSE FALSE) " + query
+	explainSQL := "EXPLAIN (FORMAT JSON, ANALYZE FALSE, VERBOSE FALSE) " + query //nolint:gosec // fixed prefix, query is validated by caller
 	rows, err := c.db.QueryContext(queryCtx, explainSQL)
 	if err != nil {
 		return "", fmt.Errorf("failed to produce execution plan: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var plan string
 	for rows.Next() {

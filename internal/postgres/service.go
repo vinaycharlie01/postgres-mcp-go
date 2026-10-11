@@ -53,7 +53,7 @@ func quoteName(ident string) (string, error) {
 
 // splitObjectName splits "schema.object" → (schema, object).
 // Falls back to defaultSchema when no schema prefix is present.
-func splitObjectName(name, defaultSchema string) (schema, object string) {
+func splitObjectName(name, defaultSchema string) (schema, object string) { //nolint:unparam // defaultSchema kept for API consistency
 	name = strings.TrimSpace(name)
 	if idx := strings.LastIndex(name, "."); idx >= 0 {
 		schema = strings.Trim(name[:idx], `" `)

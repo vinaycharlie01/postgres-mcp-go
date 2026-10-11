@@ -1,0 +1,37 @@
+package version
+
+import (
+	"fmt"
+	"runtime"
+)
+
+var (
+	Version   = "dev"
+	Commit    = "none"
+	BuildDate = "unknown"
+)
+
+type Info struct {
+	Version   string `json:"version"`
+	Commit    string `json:"commit"`
+	BuildDate string `json:"build_date"`
+	GoVersion string `json:"go_version"`
+	OS        string `json:"os"`
+	Arch      string `json:"arch"`
+}
+
+func Get() Info {
+	return Info{
+		Version:   Version,
+		Commit:    Commit,
+		BuildDate: BuildDate,
+		GoVersion: runtime.Version(),
+		OS:        runtime.GOOS,
+		Arch:      runtime.GOARCH,
+	}
+}
+
+func (i Info) String() string {
+	return fmt.Sprintf("postgres-mcp-go %s (commit=%s, built=%s, %s/%s, %s)",
+		i.Version, i.Commit, i.BuildDate, i.OS, i.Arch, i.GoVersion)
+}

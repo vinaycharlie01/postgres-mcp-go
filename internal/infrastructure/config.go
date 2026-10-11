@@ -84,13 +84,16 @@ func (d *Duration) UnmarshalYAML(value *yaml.Node) error {
 			return fmt.Errorf("invalid duration %q: %w", s, err)
 		}
 		*d = Duration(parsed)
+
 		return nil
 	}
+
 	var secs int64
 	if err := value.Decode(&secs); err != nil {
 		return fmt.Errorf("duration must be a string (e.g. \"30s\") or a number of seconds: %w", err)
 	}
 	*d = Duration(time.Duration(secs) * time.Second)
+
 	return nil
 }
 
@@ -169,12 +172,13 @@ func getConfigPath() string {
 			return path
 		}
 	}
+
 	return "config.yaml"
 }
 
 // loadFromYAML loads configuration from a YAML file.
 func loadFromYAML(path string) (*Config, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // config file path is controlled by the application
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
@@ -183,6 +187,7 @@ func loadFromYAML(path string) (*Config, error) {
 	if err := yaml.Unmarshal(data, config); err != nil {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
+
 	return config, nil
 }
 
@@ -372,5 +377,6 @@ func lookupInt(key string) (int, bool) {
 	if err != nil {
 		return 0, false
 	}
+
 	return value, true
 }

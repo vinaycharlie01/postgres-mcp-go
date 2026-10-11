@@ -216,7 +216,7 @@ func (c *Connection) Query(ctx context.Context, query string, args ...any) (*Que
 	if err != nil {
 		return nil, fmt.Errorf("query execution failed: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	result, err := scanRows(rows, c.maxRows)
 	if err != nil {

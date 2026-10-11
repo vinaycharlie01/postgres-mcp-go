@@ -46,12 +46,14 @@ func (s *MCPServer) Start(ctx context.Context) error {
 	if err := server.Run(ctx, transport); err != nil {
 		return fmt.Errorf("failed to run MCP server: %w", err)
 	}
+
 	return nil
 }
 
 // Stop performs any cleanup required when shutting down.
 func (s *MCPServer) Stop(_ context.Context) error {
 	s.logger.Info("stopping MCP server")
+
 	return nil
 }
 
@@ -64,6 +66,7 @@ func registerTool[In any](srv *mcp.Server, name, description string, fn func(con
 		if err != nil {
 			return nil, nil, err
 		}
+
 		return nil, result, nil
 	})
 }

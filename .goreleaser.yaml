@@ -1,0 +1,53 @@
+version: 2
+
+project_name: postgres-mcp-go
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: postgres-mcp-go
+    main: ./cmd/server
+    binary: postgres-mcp-go
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s -w
+      - -X github.com/vinaycharlie01/postgres-mcp-go/pkg/version.Version={{.Version}}
+      - -X github.com/vinaycharlie01/postgres-mcp-go/pkg/version.Commit={{.Commit}}
+      - -X github.com/vinaycharlie01/postgres-mcp-go/pkg/version.BuildDate={{.Date}}
+
+archives:
+  - formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude: ["^docs:", "^test:", "^ci:", "Merge pull request", "Merge branch"]
+
+brews:
+  - repository:
+      owner: vinaycharlie01
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/vinaycharlie01/postgres-mcp-go"
+    description: "Read-only PostgreSQL MCP server for AI assistants"
+    license: "MIT"
+    install: |
+      bin.install "postgres-mcp-go"
+    test: |
+      assert_match "postgres-mcp-server", shell_output("#{bin}/postgres-mcp-go --help 2>&1", 1)
+
+release:
+  github:
+    owner: vinaycharlie01
+    name: postgres-mcp-go
