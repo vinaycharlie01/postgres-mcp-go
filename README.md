@@ -1,9 +1,19 @@
-# postgres-mcp-go
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/banner.svg">
+  <source media="(prefers-color-scheme: light)" srcset="assets/banner.svg">
+  <img alt="postgres-mcp-go" src="assets/banner.svg" width="100%">
+</picture>
+
+<br/>
 
 [![CI](https://github.com/vinaycharlie01/postgres-mcp-go/actions/workflows/ci.yml/badge.svg)](https://github.com/vinaycharlie01/postgres-mcp-go/actions/workflows/ci.yml)
 [![Go Version](https://img.shields.io/badge/Go-1.27+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![MCP Protocol](https://img.shields.io/badge/MCP-Compatible-blue?style=flat)](https://modelcontextprotocol.io)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+</div>
 
 A **read-only** [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server for PostgreSQL, written in Go. It gives AI assistants safe, structured access to your PostgreSQL databases for schema exploration, data profiling, query analysis, migration planning and more.
 
