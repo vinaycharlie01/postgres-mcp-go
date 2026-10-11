@@ -259,12 +259,13 @@ func (s *Service) FindCircularDependencies(ctx context.Context) (map[string]any,
 		color[node] = 1
 		stack = append(stack, node)
 		for _, nb := range adj[node] {
-			if color[nb] == 1 {
+			switch color[nb] {
+			case 1:
 				cycle := captureCycle(stack, nb)
 				if len(cycle) > 0 {
 					cycles = append(cycles, cycle)
 				}
-			} else if color[nb] == 0 {
+			case 0:
 				dfs(nb)
 			}
 		}

@@ -45,7 +45,8 @@ func main() {
 	conn, err := db.GetConnection(ctx, config, logger)
 	if err != nil {
 		logger.Error("failed to connect to database", "error", err)
-		os.Exit(1)
+		cancel()
+		os.Exit(1) //nolint:gocritic // cancel called explicitly above
 	}
 	defer func() {
 		if cerr := conn.Close(); cerr != nil {

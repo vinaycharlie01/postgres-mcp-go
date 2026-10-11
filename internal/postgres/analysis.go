@@ -18,7 +18,6 @@ var (
 	reSaveTran   = regexp.MustCompile(`(?i)\bSAVEPOINT\b`)
 	reTryCatch   = regexp.MustCompile(`(?i)\bEXCEPTION\b`)
 	reRaiserror  = regexp.MustCompile(`(?i)\bRAISE\s+(EXCEPTION|WARNING|NOTICE|INFO|LOG|DEBUG)\b`)
-	reThrow      = regexp.MustCompile(`(?i)\bRAISE\b`)
 	reErrorFns   = regexp.MustCompile(`(?i)\b(GET\s+(?:(?:CURRENT|STACKED)\s+)?DIAGNOSTICS|SQLSTATE|SQLERRM)\b`)
 	reCursor     = regexp.MustCompile(`(?i)\b(?:DECLARE\s+([A-Za-z_][A-Za-z0-9_]*)\s+CURSOR|OPEN\s+([A-Za-z_][A-Za-z0-9_]*))\b`)
 	reTempTable  = regexp.MustCompile(`(?i)\b(?:CREATE\s+(?:TEMP|TEMPORARY)\s+TABLE|TEMPORARY|TEMP)\s+([A-Za-z_][A-Za-z0-9_]*)`)
@@ -369,11 +368,12 @@ func (s *Service) FindTableUsage(ctx context.Context, table string) (map[string]
 			views = append(views, entry)
 		default:
 			typUpper := strings.ToUpper(typ)
-			if strings.Contains(typUpper, "PROC") {
+			switch {
+			case strings.Contains(typUpper, "PROC"):
 				procedures = append(procedures, entry)
-			} else if strings.Contains(typUpper, "TRIG") {
+			case strings.Contains(typUpper, "TRIG"):
 				triggers = append(triggers, entry)
-			} else {
+			default:
 				functions = append(functions, entry)
 			}
 		}
