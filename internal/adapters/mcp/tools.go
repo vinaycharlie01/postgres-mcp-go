@@ -32,6 +32,7 @@ func list(key string, items []map[string]any) any {
 	if items == nil {
 		items = []map[string]any{}
 	}
+
 	return map[string]any{
 		key:     items,
 		"count": len(items),

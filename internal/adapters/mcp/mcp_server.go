@@ -53,6 +53,7 @@ func (s *MCPServer) Start(ctx context.Context) error {
 // Stop performs any cleanup required when shutting down.
 func (s *MCPServer) Stop(_ context.Context) error {
 	s.logger.Info("stopping MCP server")
+
 	return nil
 }
 
@@ -65,6 +66,7 @@ func registerTool[In any](srv *mcp.Server, name, description string, fn func(con
 		if err != nil {
 			return nil, nil, err
 		}
+
 		return nil, result, nil
 	})
 }
