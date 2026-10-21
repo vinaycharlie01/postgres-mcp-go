@@ -9,7 +9,7 @@ on:
 
 env:
   GO_VERSION: "1.27"
-  MAGE_VERSION: "v1.17.2"
+  TASK_VERSION: "3.54.0"
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -24,6 +24,11 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
+      - name: Setup Task
+        uses: arduino/setup-task@v2
+        with:
+          version: ${{ env.TASK_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v7
         with:
@@ -39,17 +44,13 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
-      - name: Cache mage
-        id: cache-mage
-        uses: actions/cache@v4
+      - name: Setup Task
+        uses: arduino/setup-task@v2
         with:
-          path: ~/go/bin/mage
-          key: mage-${{ runner.os }}-${{ env.MAGE_VERSION }}
-      - name: Install mage
-        if: steps.cache-mage.outputs.cache-hit != 'true'
-        run: go install github.com/magefile/mage@${{ env.MAGE_VERSION }}
+          version: ${{ env.TASK_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Test
-        run: mage test
+        run: task test
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -66,17 +67,13 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
-      - name: Cache mage
-        id: cache-mage
-        uses: actions/cache@v4
+      - name: Setup Task
+        uses: arduino/setup-task@v2
         with:
-          path: ~/go/bin/mage
-          key: mage-${{ runner.os }}-${{ env.MAGE_VERSION }}
-      - name: Install mage
-        if: steps.cache-mage.outputs.cache-hit != 'true'
-        run: go install github.com/magefile/mage@${{ env.MAGE_VERSION }}
+          version: ${{ env.TASK_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Race
-        run: mage race
+        run: task race
 
   coverage:
     name: Coverage
@@ -87,17 +84,13 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
-      - name: Cache mage
-        id: cache-mage
-        uses: actions/cache@v4
+      - name: Setup Task
+        uses: arduino/setup-task@v2
         with:
-          path: ~/go/bin/mage
-          key: mage-${{ runner.os }}-${{ env.MAGE_VERSION }}
-      - name: Install mage
-        if: steps.cache-mage.outputs.cache-hit != 'true'
-        run: go install github.com/magefile/mage@${{ env.MAGE_VERSION }}
+          version: ${{ env.TASK_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Coverage
-        run: mage coverage
+        run: task coverage
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
@@ -113,17 +106,13 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
-      - name: Cache mage
-        id: cache-mage
-        uses: actions/cache@v4
+      - name: Setup Task
+        uses: arduino/setup-task@v2
         with:
-          path: ~/go/bin/mage
-          key: mage-${{ runner.os }}-${{ env.MAGE_VERSION }}
-      - name: Install mage
-        if: steps.cache-mage.outputs.cache-hit != 'true'
-        run: go install github.com/magefile/mage@${{ env.MAGE_VERSION }}
+          version: ${{ env.TASK_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Bench
-        run: mage bench
+        run: task bench
 
   security:
     name: Security Scan
@@ -137,15 +126,11 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
-      - name: Cache mage
-        id: cache-mage
-        uses: actions/cache@v4
+      - name: Setup Task
+        uses: arduino/setup-task@v2
         with:
-          path: ~/go/bin/mage
-          key: mage-${{ runner.os }}-${{ env.MAGE_VERSION }}
-      - name: Install mage
-        if: steps.cache-mage.outputs.cache-hit != 'true'
-        run: go install github.com/magefile/mage@${{ env.MAGE_VERSION }}
+          version: ${{ env.TASK_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Cache govulncheck
         id: cache-govulncheck
         uses: actions/cache@v4
@@ -157,7 +142,7 @@ jobs:
         run: go install golang.org/x/vuln/cmd/govulncheck@latest
       - name: govulncheck
         continue-on-error: true
-        run: mage govulncheck
+        run: task govulncheck
       - name: Trivy filesystem scan
         if: always()
         uses: aquasecurity/trivy-action@master
@@ -203,17 +188,13 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
-      - name: Cache mage
-        id: cache-mage
-        uses: actions/cache@v4
+      - name: Setup Task
+        uses: arduino/setup-task@v2
         with:
-          path: ~/go/bin/mage
-          key: mage-${{ runner.os }}-${{ env.MAGE_VERSION }}
-      - name: Install mage
-        if: steps.cache-mage.outputs.cache-hit != 'true'
-        run: go install github.com/magefile/mage@${{ env.MAGE_VERSION }}
+          version: ${{ env.TASK_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Build binary
-        run: mage build
+        run: task build
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
@@ -235,17 +216,13 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
-      - name: Cache mage
-        id: cache-mage
-        uses: actions/cache@v4
+      - name: Setup Task
+        uses: arduino/setup-task@v2
         with:
-          path: ~/go/bin/mage
-          key: mage-${{ runner.os }}-${{ env.MAGE_VERSION }}
-      - name: Install mage
-        if: steps.cache-mage.outputs.cache-hit != 'true'
-        run: go install github.com/magefile/mage@${{ env.MAGE_VERSION }}
+          version: ${{ env.TASK_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Build linux binaries
-        run: mage buildLinux
+        run: task build-linux
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
@@ -295,21 +272,17 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
-      - name: Cache mage
-        id: cache-mage
-        uses: actions/cache@v4
+      - name: Setup Task
+        uses: arduino/setup-task@v2
         with:
-          path: ~/go/bin/mage
-          key: mage-${{ runner.os }}-${{ env.MAGE_VERSION }}
-      - name: Install mage
-        if: steps.cache-mage.outputs.cache-hit != 'true'
-        run: go install github.com/magefile/mage@${{ env.MAGE_VERSION }}
+          version: ${{ env.TASK_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Install GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           install-only: true
       - name: Release
-        run: mage release
+        run: task release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
